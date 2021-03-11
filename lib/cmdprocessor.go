@@ -41,6 +41,27 @@ func (cp *CmdProcessor) Start(request *JobRequest) (*Job, error) {
 	return job, nil
 }
 
+// Stop will allow to stop running job
+func (cp *CmdProcessor) Stop(id string) error {
+	job, err := cp.repo.getJob(id)
+	if err != nil {
+		return err
+	}
+
+	err = job.Process().Kill()
+	if err != nil {
+		cp.logger.Error("failed to stop job with error: ", err)
+		return err
+	}
+	_, _ = cp.repo.updateJobStatus(job.JobID(), manualStop, undefinedExitCode)
+	return nil
+}
+
+// GetJob will allow to retrieve job
+func (cp *CmdProcessor) GetJob(id string) (*Job, error) {
+	return cp.repo.getJob(id)
+}
+
 func (cp *CmdProcessor) beforeStart(request *JobRequest) (*Job, error) {
 	var job Job
 
@@ -77,25 +98,4 @@ func (cp *CmdProcessor) handleWait(jobID string, osCmd *exec.Cmd) {
 		_, _ = cp.repo.updateJobStatus(jobID, status, osCmd.ProcessState.ExitCode())
 		cp.logger.Trace("command wait completed with status: ", status)
 	}()
-}
-
-// Stop will allow to stop running job
-func (cp *CmdProcessor) Stop(id string) error {
-	job, err := cp.repo.getJob(id)
-	if err != nil {
-		return err
-	}
-
-	err = job.Process().Kill()
-	if err != nil {
-		cp.logger.Error("failed to stop job with error: ", err)
-		return err
-	}
-	_, _ = cp.repo.updateJobStatus(job.JobID(), manualStop, undefinedExitCode)
-	return nil
-}
-
-// GetJob will allow to retrieve job
-func (cp *CmdProcessor) GetJob(id string) (*Job, error) {
-	return cp.repo.getJob(id)
 }

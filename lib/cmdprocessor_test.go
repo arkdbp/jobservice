@@ -29,10 +29,7 @@ func Test_cmdProcessor_StartGetJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cp := &CmdProcessor{
-				logger: tt.fields.logger,
-				repo:   tt.fields.repo,
-			}
+			cp := NewCmdProcessor(tt.fields.logger, tt.fields.repo)
 			var wg sync.WaitGroup
 			jb, err := cp.Start(&JobRequest{
 				Path:      "ls",
@@ -81,7 +78,7 @@ func Test_cmdProcessor_StartGetJob(t *testing.T) {
 					if err != nil && err == io.EOF {
 						break
 					}
-					t.Logf("read perform: %d size of data data: %s", n, data)
+					t.Logf("read error perform: %d size of data data: %s", n, data)
 				}
 
 			}()
@@ -110,10 +107,7 @@ func Test_cmdProcessor_StartStopJob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cp := &CmdProcessor{
-				logger: tt.fields.logger,
-				repo:   tt.fields.repo,
-			}
+			cp := NewCmdProcessor(tt.fields.logger, tt.fields.repo)
 
 			jb, err := cp.Start(&JobRequest{
 				Path:      "ls",
