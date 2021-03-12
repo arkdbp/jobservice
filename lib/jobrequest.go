@@ -36,6 +36,6 @@ func newJob(request *JobRequest) (*Job, error) {
 	job.jobID = uuid.New().String()
 	job.output = NewJobBuffer()
 	job.error = NewJobBuffer()
-	job.lock = &sync.Mutex{}
+	job.lock = sync.RWMutex{}
 	return &job, nil
 }

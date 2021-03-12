@@ -9,13 +9,13 @@ import (
 // MemRepo memory storage implementation
 type MemRepo struct {
 	jobStorage map[string]*Job
-	lock       sync.Locker
+	lock       sync.RWMutex
 	logger     *logrus.Logger
 }
 
 // NewMemRepo will allow to create an instance of MemRepo
 func NewMemRepo() *MemRepo {
-	return &MemRepo{jobStorage: make(map[string]*Job), lock: &sync.Mutex{}, logger: logrus.New()}
+	return &MemRepo{jobStorage: make(map[string]*Job), lock: sync.RWMutex{}, logger: logrus.New()}
 }
 
 func (m *MemRepo) saveJob(job *Job) (*Job, error) {
@@ -26,8 +26,8 @@ func (m *MemRepo) saveJob(job *Job) (*Job, error) {
 }
 
 func (m *MemRepo) getJob(ID string) (*Job, error) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.lock.RLock()
+	defer m.lock.RUnlock()
 	job, ok := m.jobStorage[ID]
 	if !ok {
 		return nil, errors.New("job not available")

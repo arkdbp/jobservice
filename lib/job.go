@@ -27,13 +27,13 @@ type Job struct {
 	output    *JobBuffer
 	error     *JobBuffer
 	process   *os.Process
-	lock      sync.Locker
+	lock      sync.RWMutex
 }
 
 // JobID getter to get jobID
 func (c *Job) JobID() string {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.jobID
 }
 
@@ -46,8 +46,8 @@ func (c *Job) SetJobID(jobID string) {
 
 // Process getter to get the command underlined process
 func (c *Job) Process() *os.Process {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.process
 }
 
@@ -60,8 +60,8 @@ func (c *Job) SetProcess(process *os.Process) {
 
 // ExitCode getter to get exit code
 func (c *Job) ExitCode() int {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.exitCode
 }
 
@@ -81,22 +81,22 @@ func (c *Job) SetStatus(status int) {
 
 // Status getter to get the status
 func (c *Job) Status() int {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.status
 }
 
 // Output getter to get the output
 func (c *Job) Output() *JobBuffer {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.output
 }
 
 // Error getter to get error
 func (c *Job) Error() *JobBuffer {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	return c.error
 }
 
