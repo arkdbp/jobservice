@@ -6,8 +6,6 @@ import (
 	"sync"
 )
 
-const undefinedExitCode = -2
-
 // MemRepo memory storage implementation
 type MemRepo struct {
 	jobStorage map[string]*Job
@@ -46,14 +44,8 @@ func (m *MemRepo) updateJobStatus(ID string, status int, exitCode int) (*Job, er
 		return nil, errors.New("job not available")
 	}
 
-	if job.Status() != manualStop {
-		job.SetStatus(status)
-	}
-
-	if exitCode > undefinedExitCode {
-		job.SetExitCode(exitCode)
-	}
-
+	job.SetStatus(status)
+	job.SetExitCode(exitCode)
 	m.jobStorage[job.jobID] = job
 	return job, nil
 }

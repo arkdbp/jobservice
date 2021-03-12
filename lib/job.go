@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 )
 
 const (
@@ -103,11 +104,12 @@ func (c *Job) getCommand() *exec.Cmd {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	return &exec.Cmd{
-		Path:   c.path,
-		Args:   c.args,
-		Dir:    c.directory,
-		Env:    c.envs,
-		Stdout: c.output,
-		Stderr: c.error,
+		Path:        c.path,
+		Args:        c.args,
+		Dir:         c.directory,
+		Env:         c.envs,
+		Stdout:      c.output,
+		Stderr:      c.error,
+		SysProcAttr: &syscall.SysProcAttr{Setpgid: true},
 	}
 }

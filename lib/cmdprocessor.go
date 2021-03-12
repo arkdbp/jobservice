@@ -2,8 +2,8 @@ package lib
 
 import (
 	"github.com/sirupsen/logrus"
-	"os"
 	"os/exec"
+	"syscall"
 )
 
 // CmdProcessor will allow to start/stop
@@ -24,19 +24,22 @@ func (cp *CmdProcessor) Start(request *JobRequest) (*Job, error) {
 		return nil, err
 	}
 
-	jobID := job.jobID
+	jobID := job.JobID()
 	osCmd := job.getCommand()
 	err = osCmd.Start()
 	if err != nil {
 		cp.logger.Error("failed to run command with error: ", err)
 
 		// ProcessState will not be available here so exit code will be -1 which represent wait hasn't been called yet
-		_, _ = cp.repo.updateJobStatus(jobID, jobError, osCmd.ProcessState.ExitCode())
+		_, err = cp.repo.updateJobStatus(jobID, jobError, osCmd.ProcessState.ExitCode())
+		if err != nil {
+			cp.logger.Error("failed to update job status with error: ", err)
+		}
 		return nil, err
 	}
 
-	cp.updateJobProcess(osCmd.Process, job)
-	cp.handleWait(jobID, osCmd)
+	job.SetProcess(osCmd.Process)
+	go cp.handleWait(jobID, osCmd)
 	cp.logger.Trace("command started with status: ", job.Status())
 	return job, nil
 }
@@ -48,12 +51,23 @@ func (cp *CmdProcessor) Stop(id string) error {
 		return err
 	}
 
-	err = job.Process().Kill()
+	processGroupID, err := syscall.Getpgid(job.Process().Pid)
 	if err != nil {
 		cp.logger.Error("failed to stop job with error: ", err)
 		return err
 	}
-	_, _ = cp.repo.updateJobStatus(job.JobID(), manualStop, undefinedExitCode)
+
+	err = syscall.Kill(-processGroupID, syscall.SIGKILL)
+	if err != nil {
+		cp.logger.Error("failed to stop job with error: ", err)
+		return err
+	}
+
+	_, err = cp.repo.updateJobStatus(job.JobID(), manualStop, 130)
+	if err != nil {
+		cp.logger.Error("failed to update job status with error: ", err)
+		return err
+	}
 	return nil
 }
 
@@ -63,39 +77,34 @@ func (cp *CmdProcessor) GetJob(id string) (*Job, error) {
 }
 
 func (cp *CmdProcessor) beforeStart(request *JobRequest) (*Job, error) {
-	var job Job
-
-	validator := requestJobValidator(request)
-	err := validator(&job)
+	job, err := newJob(request)
 	if err != nil {
-		cp.logger.Error("failed to validate request with error: ",err)
+		cp.logger.Error("failed to validate request with error: ", err)
 		return nil, err
 	}
 
-	jb, err := cp.repo.saveJob(&job)
+	jb, err := cp.repo.saveJob(job)
 	if err != nil {
-		cp.logger.Error("failed to save job with error: ",err)
+		cp.logger.Error("failed to save job with error: ", err)
 		return nil, err
 	}
 
 	return jb, nil
 }
 
-func (cp *CmdProcessor) updateJobProcess(process *os.Process, job *Job) {
-	job.SetProcess(process)
-	_, _ = cp.repo.saveJob(job)
-}
-
 func (cp *CmdProcessor) handleWait(jobID string, osCmd *exec.Cmd) {
-	go func() {
-		status := success
-		err := osCmd.Wait()
-		if err != nil {
-			cp.logger.Errorf("command wait error:%+v status: %d", err, status)
-			status = jobError
-		}
+	status := success
+	err := osCmd.Wait()
+	if err != nil {
+		cp.logger.Errorf("command wait error:%+v status: %d", err, status)
+		status = jobError
+	}
 
-		_, _ = cp.repo.updateJobStatus(jobID, status, osCmd.ProcessState.ExitCode())
-		cp.logger.Trace("command wait completed with status: ", status)
-	}()
+	_, err = cp.repo.updateJobStatus(jobID, status, osCmd.ProcessState.ExitCode())
+	if err != nil {
+		cp.logger.Error("failed to update job status with error: ", err)
+		return
+	}
+
+	cp.logger.Trace("command wait completed with status: ", status)
 }

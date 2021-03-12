@@ -7,13 +7,13 @@ import (
 
 // JobBuffer will allow to use bytes.Buffer for concurrent use
 type JobBuffer struct {
-	bytesBuffer *bytes.Buffer
+	bytesBuffer bytes.Buffer
 	lock        sync.Locker
 }
 
 // NewJobBuffer will allow to create instance of JobBuffer
 func NewJobBuffer() *JobBuffer {
-	return &JobBuffer{bytesBuffer: &bytes.Buffer{}, lock: &sync.Mutex{}}
+	return &JobBuffer{bytesBuffer: bytes.Buffer{}, lock: &sync.Mutex{}}
 }
 
 // Write will allow to concurrent write
