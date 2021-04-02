@@ -1,10 +1,13 @@
 package lib
 
 import (
+	"github.com/google/wire"
 	"github.com/sirupsen/logrus"
 	"os/exec"
 	"syscall"
 )
+
+var CMDLibSet = wire.NewSet(NewCmdProcessor, NewMemRepo, wire.Bind(new(Repo), new(*MemRepo)))
 
 // CmdProcessor will allow to start/stop
 type CmdProcessor struct {
