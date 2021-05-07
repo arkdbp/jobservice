@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package api;
+service JobService {
+    rpc StartJob (StartJobRequest) returns (StartJobResponse) {}
+    rpc StopJob (IDRequest) returns (StopResponse) {}
+    rpc GetJob (IDRequest) returns (Job) {}
+    rpc StreamJobOutput (IDRequest) returns (stream JobOutput) {}
+}
+enum JobStatus {
+    UNDEFINED = 0;
+    // Running job
+    STARTED = 1;
+    // Finished successfully
+    FINISHED = 2;
+    // Manually stop by stop api
+    MANUAL_STOP = 3;
+    // Error
+    ERROR = 4;
+}
+message StartJobRequest {
+    // Command path to be run, required non empty string
+    string path = 1;
+    // Command arguments
+    repeated string args = 2;
+    // Process environment
+    repeated string envs = 3;
+    // Directory to run the command
+    string directory = 4;
+}
+
+message StartJobResponse {
+    // Job object
+    Job job = 1;
+}
+
+message IDRequest {
+    // Identifier of the job, UUID generated string
+    string job_id = 1;
+}
+
+// StopResponse
+message StopResponse {
+}
+
+message Job {
+    // Command path to be run, required non empty string
+    string path = 1;
+    // Command arguments
+    repeated string args = 2;
+    // Process environment
+    repeated string envs = 3;
+    // Directory to run the command
+    string directory = 4;
+    // job status
+    JobStatus status = 5;
+    // id string identifier for job, UUID generated string
+    string job_id = 6;
+    // exit code for job
+    int32 exit_code = 7;
+}
+
+message JobOutput {
+    // job output this will only provide stdout
+    string output = 1;
+    // job error if any this will only provide stderr
+    string error = 2;
+}

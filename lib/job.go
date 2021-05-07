@@ -30,6 +30,54 @@ type Job struct {
 	lock      sync.RWMutex
 }
 
+func (c *Job) Directory() string {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.directory
+}
+
+func (c *Job) SetDirectory(directory string) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	c.directory = directory
+}
+
+func (c *Job) Envs() []string {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.envs
+}
+
+func (c *Job) SetEnvs(envs []string) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	c.envs = envs
+}
+
+func (c *Job) Args() []string {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.args
+}
+
+func (c *Job) SetArgs(args []string) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	c.args = args
+}
+
+func (c *Job) Path() string {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return c.path
+}
+
+func (c *Job) SetPath(path string) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	c.path = path
+}
+
 // JobID getter to get jobID
 func (c *Job) JobID() string {
 	c.lock.RLock()

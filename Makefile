@@ -13,3 +13,7 @@ test-race-log:
 
 clean-cache:
 	go clean -testcache
+
+
+proto-gen:
+	protoc -I/usr/local/include  -I"${GOPATH}"/src   -I./api/  --go_out=plugins=grpc:./api  ./api/job.proto
